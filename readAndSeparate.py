@@ -32,21 +32,18 @@ def readAndSeparate(Filepath: str, chunksize: int = 6, framesTillSignal: int = 4
     img = nib.load(Filepath)
     # turn the images into a 'data' format
     brainsdata = img.get_fdata()
-    #print('img.shape: ', img.shape)
 
     # separate the first four entries as these correspond to images
     # before a movement starts from the bulk of images
     firstnothing = brainsdata[:,:,:,0:framesTillSignal]
-    #print('nothing.shape', nothing.shape)
     brainsdata180 = brainsdata[:,:,:,framesTillSignal:]
-    #print('brainsdata180: ', brainsdata180.shape)
 
     # grouping data into chunks of 4 images corresponding to 15 second intervals
     # and separate movement from 'nothing'(no movement) that
     # separates the movements
     brainsdatachunks = chunks(brainsdata180,chunksize)
     brainsdatchunks = np.asarray(brainsdatachunks)
-    #print('brainsdatchunks: ', brainsdatchunks.shape)
+
 
     # grouping the chunks into arrays by type of movement
 
@@ -55,8 +52,6 @@ def readAndSeparate(Filepath: str, chunksize: int = 6, framesTillSignal: int = 4
     lips = []
     nothinglst =[]
     dims = brainsdatchunks.shape
-    #print('dims[0]: ',dims[0])
-
 
     for i in range(0,dims[0]):
 
@@ -64,16 +59,12 @@ def readAndSeparate(Filepath: str, chunksize: int = 6, framesTillSignal: int = 4
 
         if i % chunksize == 0:
             finger.append(temp)
-            #print('i: ', i.shape)
         if i % chunksize == 2:
             foot.append(temp)
-        # print('i: ', i.shape)
         if i % chunksize == 4:
             lips.append(temp)
-        # print('i: ', i.shape)
         else:
             nothinglst.append(temp)
-        # print('i: ', i.shape)
 
     # converting to numpy arrays
     finger = np.asarray(finger)
@@ -89,8 +80,17 @@ def readAndSeparate(Filepath: str, chunksize: int = 6, framesTillSignal: int = 4
 
     return fingershrunk, footshrunk, lipsshrunk, nothingshrunk
 
+
+
+
 if __name__ == "__main__":
     # load fmri images for patient 5 finger foot lip movements
     Filepath = os.path.join('data', 'sub-05', 'ses-retest', 'func', 'sub-05_ses-retest_task-fingerfootlips_bold.nii.gz')
+    # need to take the 'nothing' that occurs after the movement away from each movement
+    # to remove background 
+    # fing[0] - nothing[0]
+    # foot [0] - nothing [1]
+    # lip [0] - nothing[2]
+    # repeat
     fing, foot, lip, nothing = readAndSeparate(Filepath, framesTillSignal = 6)
     print(fing.shape)
