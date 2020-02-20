@@ -16,32 +16,32 @@ def build_model():
     :return:
     '''
     model = Sequential()
-    model.add(Conv2D(32, 3, input_shape=(64, 30, 4)))
+    model.add(Conv2D(16, 3, input_shape=(64, 30, 4)))
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=2))
+    model.add(MaxPooling2D(pool_size=4))
 
-    model.add(Conv2D(64, 3))
-    model.add(Activation('relu'))
-    model.add(Conv2D(64, 3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=2))
+    #model.add(Conv2D(16, 3))
+    #model.add(Activation('relu'))
+    #model.add(Conv2D(16, 3))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=2))
 
     model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
-    model.add(Dense(64))
+    model.add(Dense(32))
     model.add(Activation('relu'))
     model.add(Dropout(0.2)) # gets rid of this % of nodes
     model.add(Dense(3)) # 3 different classes
     model.add(Activation('softmax')) # better than sigmoid for classification
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer='rmsprop',
+                  optimizer='adam',
                   metrics=[acc_metric],)
 
     return model
 
 def train_model(model):
     batch_size = 32
-    num_epochs = 100
+    num_epochs = 150
 
     npz_file = np.load('training_data.npz')
     ylabel = npz_file['labels']
@@ -64,6 +64,7 @@ def train_model(model):
     auc = metrics.roc_auc_score(test_y, pred_y)
     print('auc is ' + str(auc))
     print('history keys are ' + str(history.history.keys()))
+    pyplot.plot(history.history['val_categorical_accuracy'])
     pyplot.plot(history.history[acc_metric])
     pyplot.plot(history.history['val_loss'])
     pyplot.plot(history.history['loss'])
@@ -72,9 +73,9 @@ def train_model(model):
     pyplot.xlim(0,num_epochs)
     pyplot.ylim(0)
     pyplot.title('Categorical Accuracy & loss for classifier')
-    pyplot.legend(['training accuracy metric', 'validation loss', 'training loss'], loc='upper right')
-    pyplot.show()
+    pyplot.legend(['validation accuracy metric', 'training accuracy metric', 'validation loss', 'training loss'], loc='lower left')
     pyplot.savefig('Cat acc loss.png')
+    pyplot.show()
 
 #    model.save_weights('weights/first_try.h5')
 
