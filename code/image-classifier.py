@@ -1,10 +1,11 @@
 from keras.models import Sequential
-from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
+from sklearn import metrics
 from keras.preprocessing.image import ImageDataGenerator
 import os
 import numpy as np
-
+from matplotlib import pyplot
 
 
 
@@ -15,13 +16,13 @@ def build_model():
     :return:
     '''
     model = Sequential()
-    model.add(Conv1D(32, 3, input_shape=(64, 30)))
+    model.add(Conv2D(32, 3, input_shape=(64, 30, 4)))
     model.add(Activation('relu'))
-    model.add(MaxPooling1D(pool_size=2))
+    model.add(MaxPooling2D(pool_size=2))
 
-    model.add(Conv1D(32, 3))
+    model.add(Conv2D(32, 3))
     model.add(Activation('relu'))
-    model.add(MaxPooling1D(pool_size=2))
+    model.add(MaxPooling2D(pool_size=2))
 
     model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
     model.add(Dense(64))
@@ -32,7 +33,8 @@ def build_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer='rmsprop',
-                  metrics=['accuracy'])
+                  metrics=[acc_metric],)
+
     return model
 
 def train_model(model):
@@ -42,7 +44,7 @@ def train_model(model):
     ylabel = npz_file['labels']
     xdata = npz_file['data']
 
-    model.fit(
+    history = model.fit(
         xdata,
         ylabel,
         batch_size=batch_size,
@@ -54,12 +56,18 @@ def train_model(model):
 
     pred_y = model.predict(test_x)
 
-    print(pred_y)
+    auc = metrics.roc_auc_score(test_y, pred_y)
+    print('auc is ' + str(auc))
 
+    pyplot.plot(history.history[acc_metric])
+    #pyplot.plot(history.history['mse'])
+    pyplot.ylabel('auc')
+    pyplot.xlabel('epoch')
+    pyplot.show()
 
-#    model.save_weights('weights/first_try.h5')  # always save your weights
+#    model.save_weights('weights/first_try.h5')
 
 if __name__ == "__main__":
-    print(os.getcwd())
+    acc_metric = 'categorical_accuracy'
     model = build_model()
     train_model(model)
