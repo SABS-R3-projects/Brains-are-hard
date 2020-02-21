@@ -16,7 +16,7 @@ def build_model():
     :return:
     '''
     model = Sequential()
-    model.add(Conv2D(16, 3, input_shape=(64, 30, 4)))
+    model.add(Conv2D(16, 3, input_shape=(64, 30, 1)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=4))
 
@@ -41,7 +41,7 @@ def build_model():
 
 def train_model(model):
     batch_size = 32
-    num_epochs = 150
+    num_epochs = 200
 
     npz_file = np.load('training_data.npz')
     ylabel = npz_file['labels']
@@ -60,14 +60,21 @@ def train_model(model):
     test_x = npz_file['data']
 
     pred_y = model.predict(test_x)
+    rounded_pred = np.argmax(pred_y, axis=1)
+    rounded_test = np.argmax(test_y, axis=1) # https://stackoverflow.com/questions/54589669/
 
     auc = metrics.roc_auc_score(test_y, pred_y)
+    acc = metrics.accuracy_score(rounded_test, rounded_pred)
+    cm = metrics.confusion_matrix(rounded_test, rounded_pred)
     print('auc is ' + str(auc))
-    print('history keys are ' + str(history.history.keys()))
-    pyplot.plot(history.history['val_categorical_accuracy'])
-    pyplot.plot(history.history[acc_metric])
-    pyplot.plot(history.history['val_loss'])
-    pyplot.plot(history.history['loss'])
+    print('acc is ' + str(acc))
+    print('confusion matrix:-')
+    print(cm)
+
+    pyplot.plot(history.history['val_categorical_accuracy'], linewidth=3)
+    pyplot.plot(history.history[acc_metric], linewidth=3)
+    pyplot.plot(history.history['val_loss'], linewidth=3)
+    pyplot.plot(history.history['loss'], linewidth=3, color='purple')
     pyplot.ylabel('acc')
     pyplot.xlabel('epoch')
     pyplot.xlim(0,num_epochs)
